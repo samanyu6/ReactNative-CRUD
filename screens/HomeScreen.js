@@ -9,26 +9,48 @@ import {
   View,
 } from 'react-native';
 import { RkTextInput,RkButton} from 'react-native-ui-kitten';
-import { WebBrowser } from 'expo';
-
+import { WebBrowser, SQLite } from 'expo';
 import { MonoText } from '../components/StyledText';
+
+const db = SQLite.openDatabase('user.db');
 
 export default class HomeScreen extends React.Component {
   static navigationOptions = {
     header: null,
   };
 
+  componentDidMount() {
+    this._createTables();
+  }
+  
+
   constructor(props) {
     super(props);
 
     this.state = {
-      username: " ",
-      password: " "
+      username: '' ,
+      password: ''
     };
   }
 
   _handlePress() {
-    alert("User:" + this.state.username + " Password" + this.state.password);
+    // alert("User:" + this.state.username + " Password" + this.state.password);
+    var user = String(this.state.username);
+    var pass = String(this.state.password);
+    db.transaction(
+      tx => {
+        tx.executeSql('insert into people values (?,?);', [user, pass], succ => { alert('Database updated.') }, err => { alert('Error.')});
+      }
+    );
+    this.setState({ username: '', password: '' });
+  }
+
+  _createTables() {
+    db.transaction(
+      tx => {
+        tx.executeSql('create table if not exists people(username text not null, password text not null);');
+      }
+    );
   }
 
   render() {
